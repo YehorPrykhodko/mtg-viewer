@@ -16,7 +16,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-
+use Symfony\Component\HttpFoundation\Request;
 #[AsCommand(
     name: 'import:card',
     description: 'Add a short description for your command',
@@ -25,15 +25,15 @@ class ImportCardCommand extends Command
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly LoggerInterface        $logger,
-        private array                           $csvHeader = []
-    )
-    {
+        private readonly LoggerInterface $logger,
+        private array $csvHeader = []
+    ) {
         parent::__construct();
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->logger->info('Début importation des cartes.');
         ini_set('memory_limit', '2G');
         // On récupère le temps actuel
         $io = new SymfonyStyle($input, $output);
@@ -60,10 +60,18 @@ class ImportCardCommand extends Command
             $i++;
 
             if (!in_array($row['uuid'], $uuidInDatabase)) {
-                $this->addCard($row);
+                try {
+                    $this->addCard($row);
+                } catch (\Throwable $e) {
+                    $this->logger->error(sprintf(
+                        'Erreur import carte UUID: %s, Message: %s',
+                        $row['uuid'],
+                        $e->getMessage()
+                    ));
+                }
             }
 
-            if ($i % 2000 === 0) {
+            if ($i % 100 === 0) {
                 $this->entityManager->flush();
                 $this->entityManager->clear();
                 $progressIndicator->advance();
@@ -79,6 +87,11 @@ class ImportCardCommand extends Command
         $end = microtime(true);
         $timeElapsed = $end - $start;
         $io->success(sprintf('Imported %d cards in %.2f seconds', $i, $timeElapsed));
+        $this->logger->info(sprintf(
+            'Fin importation des cartes. %d cartes importées en %.2f secondes.',
+            $i,
+            $timeElapsed
+        ));
         return Command::SUCCESS;
     }
 
@@ -106,6 +119,5 @@ class ImportCardCommand extends Command
         $card->setText($row['text']);
         $card->setType($row['type']);
         $this->entityManager->persist($card);
-
     }
 }
