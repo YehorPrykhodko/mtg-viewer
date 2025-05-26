@@ -1,94 +1,48 @@
-# MTG Viewer    
+## ✅ Objectifs réalisés
 
-## Description
-MTG Viewer est un projet permettant de parcourrir et rechercher des cartes de Magic The Gathering. 
-Il est basé sur une API REST, et utilise le framework Symfony pour le back-end et VueJs pour le front-end.
+## 🔧 0. Complétion de l'import
 
-## Stack technique
-- Symfony 7.0
-- PHP 8.2
-- MariaDB 10
-- NodeJs 20
-- VueJs 3 / Vite 2
-- Swagger
+- ✔ Importation depuis un fichier CSV.
+- ✔ Optimisation du traitement en batch (`flush()` toutes les 100 entrées).
+- ✔ Utilisation de `Symfony Profiler` pour mesurer les performances.
+- ✔ Import automatisé avec la commande :
+  ```bash
+  bin/console import:card
+  ```
 
-## Documentation / Lien
-- Symfony : https://symfony.com/doc/current/index.html
-- Installation de docker : https://docs.docker.com/get-docker/
+---
 
-## Installation
-### Prérequis
-- Docker
-- Docker compose
-- *Optionnel* : Make
+## 📝 1. Ajout de logs
 
-### Installation du projet avec Make
-Il suffit de lancer make install pour installer le projet, puis récuper les données necessaire pour le projet.
-```bash
-make install
-make get-data
-```
+- ✔ Utilisation de `LoggerInterface` pour tracer :
+  - Chaque appel aux routes API (GET `/api/card`, `/search`, etc).
 
-### Installation du projet sans Make
-Il faut: 
-- copier le fichier .env.example en .env, et l'alimenter avec les bonnes valeurs
-- récupérer les container
-- build le container php 
-- installer les dépendances 
-- lancer les migrations de la base de données
+Logs visibles dans :  
+`var/log/dev.log`
+---
 
-```bash
-cp .env.example .env
-docker compose pull
-docker compose build
-docker compose run --rm php composer install
-docker compose run --rm vite npm install
-docker compose run --rm php bin/console doctrine:migrations:migrate --no-interaction
-````
+## 🔎 2. Recherche de cartes
 
-Ensuite, il faut récupérer les données nécessaires pour le projet
-```bash
-curl https://mtgjson.com/api/v5/AllPrintingsCSVFiles.zip -o data/AllPrintingsCSVFiles.zip
-unzip -o data/AllPrintingsCSVFiles.zip -d data
-```
-Si vous n'avez pas curl, vous pouvez télécharger le fichier manuellement et le placer dans le dossier data.
+- ✔ Page de recherche ajoutée.
+- ✔ Route API : `GET /api/card/search?q=...`
+- ✔ Résultats limités à 20 cartes.
+- ✔ Paramètre optionnel `setCode` pour filtrer.
+- ✔ Documenté avec OpenAPI/Swagger.
 
-## Importer les données
-Pour importer les données dans la base de données, il faut lancer la commande suivante:
-```bash
-docker compose run --rm php bin/console import:card
-```
+---
 
-## Documentation de l'API
-La documentation de l'API est disponible à l'adresse suivante: [http://localhost/api/doc](http://localhost/api/doc). Pensez à adapter l'adresse si vous n'êtes pas en local, ou sur un autre port que le 80.  
-La documentation est générée avec [Swagger](https://swagger.io/) en respectant la norme [OpenAPI](https://swagger.io/specification/).  
-Vous pouvez voir le controller ApiCardController.php pour un premier exemple.
+## 🧪 3. Filtres
 
-## Lancer les linters
-Nous avons dans ce projets 3 linters: phpstan, phpcs et eslint.
-Pour les lancer il faut utiliser les commandes suivantes:
-```bash
-docker compose run --rm php composer run-script phpstan
-docker compose run --rm php composer run-script phpcs
-docker compose run --rm vite npm run lint
-```  
-Il existe également 2 commandes pour corriger automatiquement les erreurs de phpcs et eslint
-```bash
-docker compose run --rm php composer run-script phpcs:fix
-docker compose run --rm vite npm run lint:fix
-```
+- ✔ Filtres disponibles dans l'API :
+  - `setCode` (via `/api/card/search`)
+  - Tous les `setCode` listés via :
+    ```http
+    GET /api/card/set-codes
+    ```
+---
 
-Les différente documentation des linters:   
-- phpstan : https://phpstan.org/
-- phpcs : https://github.com/squizlabs/PHP_CodeSniffer
-- eslint : https://eslint.org/
+## 📚 4. Pagination
 
-
-## Lancer le projet
-Une fois le projet installé, il suffit de faire: 
-```bash
-docker compose up
-```
-
-## Excercice
-Voir le fichier [EXERCICE.md](EXERCICE.md)
+- ✔ Pagination activée sur la liste des cartes.
+- ✔ Route `GET /api/card?page=...&setCode=...`
+---
